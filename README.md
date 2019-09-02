@@ -14,7 +14,7 @@ Twilio-Demo-Service sends SMS and receives SMS/MMS messages through the Twilio s
 ```
     NODE_ENV=development
     PORT=8000
-    TWILIO_MYNUMBER=<A SMS/MMS capable phone registered to your demo account>
+    TWILIO_MYNUMBER=<The SMS/MMS capable verified phone number on your account>
     TWILIO_NUMBER=<Your FULL Twilio phone number>
     TWILIO_SID=<Your Twilio account SID>
     TWILIO_AUTH=<Your Twilio Auth Token>
@@ -27,9 +27,9 @@ Twilio-Demo-Service sends SMS and receives SMS/MMS messages through the Twilio s
 This service exposes three endpoints:
 * `GET /test` -> returns status 200 and `Server is running and accessible` if everything is working correctly.
 * `POST /api/sms/send` =>
+    * Requires a JSON body containing the message to be sent to the verified phone number on your account, i.e. `{ "message": "Hello, SMS World!" }`
     * Success - returns status 200 and a JSON body with the message SID from Twilio, i.e. `{ message_sid: <message SID from Twilio> }`
     * Failure - returns status 400 and a JSON body with the error message, i.e. `{ error: <error message> }`
 * `POST /api/sms/receive` (This is the webhook URL to provide to Twilio for messaging) =>
-    * Success - returns a 200 and an XML body containing the outgoing message to Twilio
+    * Success - returns a 200 and an XML body containing the outgoing message to Twilio. The outgoing message is determined by the prescense of the keywords `hello`, `long`, or just an empty message.
     * Failure - returns a 400 and JSON body to Twilio that can be viewed in the Twilio debugger. Also writes the error to the local console.
-
