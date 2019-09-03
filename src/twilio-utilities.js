@@ -12,27 +12,33 @@ const TwilioUtilities = {
     },
 
     writeMediaToFile(fs, path, fileName, jpegBuffer) {
-        return fs.writeFile(
-            `${path}${fileName}.jpeg`,
-            jpegBuffer,
-            (error) => {
-                if (error) {
-                    throw error;
+        return new Promise((resolve, reject) => {
+            fs.writeFile(
+                `${path}${fileName}.jpeg`,
+                jpegBuffer,
+                (error) => {
+                    if (error) {
+                        reject(error);
+                    }
                 }
-            }
-        );
+            )
+            resolve();
+        });
     },
 
     writeMetaToFile(fs, path, fileName, message) {
-        return fs.writeFile(
-            `${path}${fileName}.txt`,
-            message,
-            (error) => {
-                if (error) {
-                    throw error;
+        return new Promise((resolve, reject) => {
+            fs.writeFile(
+                `${path}${fileName}.txt`,
+                message,
+                (error) => {
+                    if (error) {
+                        reject(error);
+                    }
                 }
-            }
-        );
+            )
+            resolve();
+        })
     },
 };
 

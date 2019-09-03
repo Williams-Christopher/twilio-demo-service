@@ -14,21 +14,22 @@ const smsRouter = express.Router();
 smsRouter
     .post('/send', jsonBodyParser, (req, res, next) => {
         const { message } = req.body;
-        console.log(TWILIO_SID);
         if (!message) {
             return res.status(400).json({ error: `Missing 'message' in request body` });
         }
 
         client.messages.create({
             body: message,
-            to: TWILIO_MYNUMBER,
             from: TWILIO_NUMBER,
+            to: TWILIO_MYNUMBER,
         })
             .then(result => {
-                console.log(result.sid);
                 return res.json({ messsage_sid: result.sid });
             })
-            .catch(next);
+            .catch(error => {
+                console.log(error.message);
+                next();
+            });
     })
     .post('/receive', urlBodyParser, (req, res, next) => {
         const twiml = new MessageResponse();
@@ -37,7 +38,7 @@ smsRouter
 
         // Handle media in the MMS
         try {
-            if(NumMedia > 0) {
+            if (NumMedia > 0) {
                 let mediaKeys = Object.keys(req.body).filter(key => key.toString().includes('MediaUrl'));
                 mediaKeys.forEach(key => {
                     const mediaUrl = req.body[key];
@@ -47,27 +48,30 @@ smsRouter
 
                     fetch(mediaUrl)
                         .then(response => {
-                            if(!response.ok) {
+                            if (!response.ok) {
                                 return new Error(`Error retreiving media ${mediaUrl}`);
                             }
                             return response.buffer()
                         })
                         .then(jpegBuffer => {
                             // What flags an error from response.buffer()?
-                            TwilioUtilities.writeMediaToFile(fs, IMAGES_PATH, messageId, jpegBuffer);
+                            TwilioUtilities.writeMediaToFile(fs, IMAGES_PATH, mediaId, jpegBuffer);
                         })
-                        .then(() => 
+                        .then(() => {
                             TwilioUtilities.deleteMedia(client, mediaUrl, messageId, mediaId)
-                        )
+                        })
+                        .then(() => {
+                            TwilioUtilities.writeMetaToFile(fs, IMAGES_PATH, mediaId, mediaUrl)
+                        })
                         .catch(error => {
-                            console.log(error);
+                            console.log(`There was an error in the fetch chain: ${error}`);
+                            next(error);
                         });
-                    TwilioUtilities.writeMetaToFile(fs, IMAGES_PATH, messageId, mediaUrl);
                 });
             }
 
         } catch (error) {
-            console.log(error);
+            console.log(`There was an error in the media try block: ${error}`);
             return res.status(400).json({ error: `${error}` });
         }
 
@@ -83,7 +87,7 @@ smsRouter
                 twiml.message(`You can't even say hello?? ${timeDate}`)
             }
         } catch (error) {
-            console.log(error);
+            console.log(`There was an error in the return message try block: ${error}`);
             return res.status(400).json({ error: `${error}` });
         }
 
